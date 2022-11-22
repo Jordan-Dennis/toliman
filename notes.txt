@@ -1,0 +1,193 @@
+Questions: @LouisDesdoigts
+    > Information destroying. 
+    > Flat Field. 
+    > Immune to errors of ... 
+
+Notes:
+    > So the diffractive pupil seems to be done.
+    > What components are we interested in including?
+    > Is there a schematic that I may have/use?
+    > What components have had their design finalised?
+
+Ideas:
+    > Finite Differences: 
+        > The Fresnel transform that we are using is still an 
+          approximation. 
+        > Finite differences is likely to be linear with the size 
+          of the array (I think).
+        > How do we compare the accuracy to our existing 
+          implementation? 
+            > As I said the general Fresnel algorithm is still an 
+              approximation. I have seen no discussion as to how 
+              accurate it is. This includes in the original text 
+              by a guy called Shannon. The chapter immediately after 
+              the Gaussian Beam chapter is on finite differences. 
+        > Some challenges that I can already think of are how to 
+          select the step size. 
+            > The wave equation is not regularising. 
+            > I think it should be safe to determine the step size 
+              by dividing the distance between the two planes of 
+              interest by some number of steps, chosen in advance 
+              by the user. 
+        > There is also the possibility of using the more advanced 
+          PDE solvers that `diffrax` provides. 
+        > The nice thing about light is that distance and time are 
+          inexorably linked because it propagates at a fixed velocity.
+    > Black:
+        > I will prepare a sample by creating a new branch and then 
+          running black over a few files. 
+        > We can examine the `git diff` output to make a decision. 
+    > Profiling:
+        > `JAX` provides some very high level profiling tools that 
+          I think we should use to determine the bottlenecks of the 
+          program.
+    > Unit tests:
+        > Are unit tests for `np.isnan` and `np.isinf` actually useful. 
+        > How can we create a more robust set of unit tests?
+    > Components:
+        > Do we need to build and extensible `Mirror` layer?
+        > Adam wanted to have a clear knowledge of which parts of the 
+          API were extensible. 
+            > I suggested that we expose certain abstract classes to 
+              the external API.
+                > These could bare the prefix `User...` following from 
+                  the collections standard library convention. 
+                > I need to check that this is indeed the case. 
+            > Other languages have a `final` keyword to stop people 
+              extending the entire API.
+                > `Python` has made a habit of adapting ideas from 
+                  other languages. It might be worth checking if this 
+                  has been implemented. 
+                    > The typing module provides this functionality
+                      via the `@typing.final()` decorator. 
+        > Do we want to implement `Deconvolution` layers?
+            > Two different types of deconvolution layers are described
+              in @LouisDesdoigts thesis. 
+            > I suggest the following class heirachy,
+```python 
+class Deconvolution(Layer):
+    @abstractmethod
+    def _deconvolve(psf: Array, data: Array) -> Array:
+
+    def __call__(self, params_dict: Dict) -> Dict:
+        
+
+class FourierDeconvolution(Deconvolution):
+```
+        > Do we want to implement Johnson noise formally as a layer?
+            > Probably isn't necessary as it is just Gaussian white 
+              noise. 
+            > I see it as a good thing to do because it makes the 
+              interface much more readable and structured. 
+            > Johnson noise is a function of the temperature and the 
+              resistance. This parametrisation could be made explicit. 
+        > Should the CCD detectors by incorporated as a detector layer 
+          in a similar manner?
+            > The arguments for this are much the same as the 
+              arguments for including the Johnson noise as a `Layer`.
+            > 
+    > Rotational symmetry:
+        > Why are all the diffractive pupils I see rotationaly 
+          symmetric with respect to some varying increment. 
+        > I have heard that sometimes assymetric pupils are the 
+          most useful but I am probably confusing two tangentially 
+          related problems.
+    > Poisson Statistics:
+        > ".. photon behaviour in the low noise regime can be 
+          approximated by Poisson statistics."
+            > No citation. 
+    > Leakage:
+        > Are we planning to simulate this in the complete forwards
+          model. 
+    > Conaire is working on a TOLIMAN literature review.
+        > Is there some good books to read on the higher level 
+          optics effects. If not what are some good papers?
+        > @benjaminpope had a list of resources for general 
+          astronomy. Would a similar system, but more specific 
+          also be useful for TOLIMAN?
+            > For myself this includes simple things; what is the 
+              flat field (@LouisDesdoigts thesis) ect. 
+            > Could include the schematic of the TOLIMAN itself. 
+    > Serialisation:
+        > It is clear that we need a way to share the forwards model
+          between people and devices. 
+        > There was talk during the semester of serialising prebuilt 
+          models using either `.json` or `.hdf5` files. 
+            > `.json` is very good (designed for) storing object 
+              oriented classes.
+            > `python` includes a `.json` processing tool in the 
+              standard library which is not so bad. 
+                > Works well with @LouisDesdoigts existing interface
+                  because it transforms the `.json` into a `dict`. 
+                > We should be able to process the keys into a 
+                  `paths_dict` and then applying the updates is very 
+                  easy.
+                    > This raises the question of should we allow the 
+                      initialisation of systems directly via a 
+                      `paths_dict`.
+                    > There is always the option of adding keyword 
+                      arguments.
+                        > I find this messy and confusing if 
+                          excessive.
+                        > There is the option for the 
+                          `multipledispatch` package. This supports 
+                          proper overloading, but it adds a 
+                          dependancy since it is not part of the 
+                          standard library. 
+        > The `.hdf5` option is more useful for large arrays. 
+            > I have already identified that the diffractive pupil 
+              is likely to be one example where we will need this. 
+            > I dislike `.hdf5` fileds because we will require 
+              two different libraries to be added as dependencies 
+              to use them. Namely `hdfdict` and `h5py`.
+                > Strictly thinking I think that the first can 
+                  be avoided with a sneaky list comprehension but 
+                  it is not necessarily a good idea to do so. 
+                    > `hdfdict` is probably guards against edge 
+                      cases much better. 
+                    > Things like corrupted files too large values 
+                      ect. 
+        > Are `.hdf5` and `.json` mutually exclusive/necessary at 
+          all?
+            > I do not think so. Since there are a lot of `float`
+              /`int` valued parameters and relatively few array 
+              valued ones `.json` makes more sense to me in the 
+              general case. However, the `.json` file could 
+              include a `name: url` pair to a `.hdf5` file for 
+              cases like the diffractive pupil. 
+        > Both `.hdf5` and `.json` have `dict` based interfaces.
+          This brings up my earlier argument about initialisation 
+          via this method. 
+    > File sharing:
+        > In general where is incomplete TOLIMAN work going to be 
+          stored and shared. There is the `Toliman` repository, 
+          but this does not seem to be a site of active development. 
+            > Both @LouisDesdoigts and @ConaireDeagan have code 
+              for the forwards model up to some complexity. 
+        > I think that better file sharing will make development 
+          much more streamlined. 
+        > I do not believe that @ConaireDeagan has been added to the 
+          `dLux` Github.
+            > Where are issues raised for TOLIMAN forwards modelling. 
+            > Are they individually taken to Peter? discussed in 
+              slack? or should we start using the Github repository 
+              as a site of development. 
+
+
+ To Do:
+    > Need to catalouge the background stars. 
+        > Either by web-scraping or by manually looking through. 
+    > Diffraction spikes/lobes will contaminate the image. 
+    > So @ConaireDegan has a simple model that works. It includes 
+      the default layers. 
+    > Currently included are:
+        > Diffractive pupil
+    > So what do I need to do based on this? Well I need to make 
+      a pipeline, that takes the model in and then runs gradient 
+      descent to retrieve the parameters. This should not be so 
+      bad. Hopefully. 
+        > We are interested in retrieving the parameters of the 
+          binary. In particular, we want to focus on the 
+          separation. 
+    > Parameters that we are expecting to have to deal with:
+        > Background stars. 
