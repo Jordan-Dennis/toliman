@@ -1,3 +1,4 @@
+22/11/2022
 Questions: @LouisDesdoigts
     > Information destroying. 
     > Flat Field. 
@@ -174,7 +175,26 @@ class FourierDeconvolution(Deconvolution):
               as a site of development. 
 
 
- To Do:
+23/11/2022
+Questions: 
+    > Do I need to catalouge the spectra of the stars that I found in 
+      the background?
+        > I believe that this will be important if we are to assess 
+          the impact that the stars have on the retrieval of the PSF. 
+        > I believe that we want to increase the complexity of the 
+          forward model until we are not seeing improvements in the 
+          resolution of the results. 
+        > It is therefore important that we perform this process on 
+          real sky models, because they will add "noise" limiting 
+          our ability to resolve the separation. 
+        > To illustrate; imagine that we just have the binary Alpha Cen A
+          B pair. We will be able to perturb the telescope much more than 
+          a complex sky model and still retrieve the results to good order. 
+            > This is an opinion/hunch. 
+        > We want the appropriate amount of detail in the sky because 
+          it will tell us to a realistic level what amount of detail 
+          we can retrieve about the telescope. 
+To Do:
     > Need to catalouge the background stars. 
         > Either by web-scraping or by manually looking through. 
     > Diffraction spikes/lobes will contaminate the image. 
@@ -191,3 +211,5 @@ class FourierDeconvolution(Deconvolution):
           separation. 
     > Parameters that we are expecting to have to deal with:
         > Background stars. 
+
+
