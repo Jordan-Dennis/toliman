@@ -177,7 +177,7 @@ class FourierDeconvolution(Deconvolution):
 
 23/11/2022
 Questions: 
-    > Do I need to catalouge the spectra of the stars that I found in 
+    1. Do I need to catalouge the spectra of the stars that I found in 
       the background?
         > I believe that this will be important if we are to assess 
           the impact that the stars have on the retrieval of the PSF. 
@@ -194,6 +194,21 @@ Questions:
         > We want the appropriate amount of detail in the sky because 
           it will tell us to a realistic level what amount of detail 
           we can retrieve about the telescope. 
+    2. How do we wish to assess the correlations between the parameters?
+        > For example, it is important that we understand how they interact
+          with the science signal (and each other). 
+        > An extreme example might be that we consider how changes to the 
+          spectrum of all of the background stars influence the retrieval 
+          of the separation. The problem with this particular example is 
+          that it is very computationally expensive and we do not expect
+          the result to matter that much.
+        > This entire discussion seems to necessitate the use of HMC, 
+          but I doubt that this is actually a viable option. 
+
+Resolutions:
+    1. We are more interested in profiling how each possible source of 
+      interacts with the model fitting process.
+
 To Do:
     > Need to catalouge the background stars. 
         > Either by web-scraping or by manually looking through. 
